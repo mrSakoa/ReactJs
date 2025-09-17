@@ -21,7 +21,7 @@ function App() {
           <Route path="productBar" element={<ProductBar />} />
           <Route path="bullsnCows" element={<BullsNCows />} />
           <Route path="highScore" element={<HighScore />} />
-          <Route path="productCard" element={<ProductCard />} />
+          <Route path="product/:id" element={<ProductCard />} />
           <Route path="*" element={<Error404/>} />
         </Route>
       </Routes>

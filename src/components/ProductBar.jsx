@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ProductBar({ title = "Products", category, limit = 8 }) {
   const [items, setItems] = useState([]);
@@ -77,7 +78,7 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
                 )}
               </div>
               {!loading && (
-                <button className="btn">Add to cart</button>
+                <Link to={`/product/${p.id}`} className="btn">Inspect</Link>
               )}
             </div>
           </article>
@@ -89,7 +90,7 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
         .rowHeader { display:flex; align-items:fakeStoreDataline; justify-content:space-between; padding: 1% }
         .rowTitle { font-size: 1.5 rem; }
         .rowLink { font-size: 1.5 rem; opacity:.9; text-decoration:none; }
-        
+
         .rowError { 
         display:flex; 
         gap:.75rem; 
@@ -100,7 +101,8 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
         border:1px 
         solid #ffe69c; 
         border-radius: 10px; 
-        margin:.5rem 0; }
+        margin:.5rem 0; 
+        }
 
         .productRow { 
           display: flex; 
@@ -137,17 +139,7 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
           padding: 0.55rem 0.8rem; 
           cursor: pointer; 
         }
-        .card .btn:active { transform: translateY(1px); }
-
-        .skeleton { position: relative; overflow: hidden; }
-        .skeleton .media { background: #1a1a1a; border-bottom: 1px solid #222; }
-        .skeleton .title, .skeleton .price { background: #1a1a1a; color: transparent; border-radius: 6px; }
-        .skeleton::after { 
-          content: ""; position: absolute; inset: 0; 
-          background: linear-gradient(90deg, #ffffff, #ffffff0f, #ffffff); 
-        }
-
-        }
+        .card .btn:active { transform: translateY(1px); }        
       `}</style>
     </section>
   );
