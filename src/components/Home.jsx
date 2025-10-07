@@ -1,5 +1,3 @@
-import { Link } from "react-router-dom";
-
 import ProductBar from "./ProductBar";
 
 function Home() {

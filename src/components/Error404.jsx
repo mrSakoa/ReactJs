@@ -25,7 +25,8 @@ function Error() {
         display: block;
         background: #000000;
         border: 2px solid #004100ff;
-        margin:  auto;
+        margin: auto;
+      }
     
     `}</style>
 

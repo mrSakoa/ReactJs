@@ -4,7 +4,7 @@ function BullsNCows() {
       <div>
         <h1>Tutorial for Bulls & cows</h1>
         <h2>Guess the 4-digit non repeateable number, from 0 to 9. After each guess, you'll receive feedback in the form of "Bulls" and "Cows". A "Bull" indicates a correct digit in the correct position, while a "Cow" indicates a correct digit in the wrong position. Press Click to Start Good luck! </h2>
-        <button class="startButton" id="startButton">Click to Start</button>
+        <button className="startButton" id="startButton">Click to Start</button>
       </div>
       <style>{`
       .startButton {
