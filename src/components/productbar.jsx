@@ -14,8 +14,8 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
   // for private folder
   // const LOCAL_IMAGE_BASE = "/src/images/";
   
-  // SETS THE FOLDER WHERE THE IMAGES ARE LOCATED IN THE PUBLIC FOLDER
-  const PUBLIC_IMAGE_BASE = "/images/";
+  // SETS THE FOLDER WHERE THE IMAGES ARE LOCATED IN THE PUBLIC FOLDER 
+  const PUBLIC_IMAGE_BASE = (import.meta.env.BASE_URL || "/") + "images/";
 
   const qRef = useMemo(() => {
     const base = collection(db, "productos");
