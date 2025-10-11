@@ -6,7 +6,7 @@ export default function BullNCow() {
   const [gameIsRunning, setGameIsRunning] = useState(false);
   const [secret, setSecret] = useState([]);
   const [userTries, setUserTries] = useState(0);
-  const [pastTries, setPastTries] = useState([]); // [{guess, bulls, cows}]
+  const [pastTries, setPastTries] = useState([]);
   const [highScores, setHighScores] = useState([]);
   const [recentGuess, setRecentGuess] = useState("—");
   const [bullsCount, setBullsCount] = useState(0);
@@ -46,7 +46,7 @@ export default function BullNCow() {
     setCowsCount(0);
     if (inputRef.current) inputRef.current.value = "";
   }
-
+  //---------------- buttons ----------------
   function startGame() {
     const code = generateSecretCode();
     setSecret(code);
@@ -88,7 +88,7 @@ export default function BullNCow() {
   function saveHighScores(scores) {
     localStorage.setItem(HS_KEY, JSON.stringify(scores));
     // update the higscore tab
-     window.dispatchEvent(new Event("highscores:update"));
+    window.dispatchEvent(new Event("highscores:update"));
   }
 
   function addHighScore(name, tries) {
@@ -127,6 +127,7 @@ export default function BullNCow() {
     setCowsCount(cows);
     setPastTries(prev => [...prev, { guess, bulls, cows }]);
 
+    // ---------- win // surrender ----------
     if (win) {
       setGameIsRunning(false);
       Swal.fire({
