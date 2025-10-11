@@ -1,9 +1,9 @@
-// src/components/ProductBar.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, getDocs, query, where, limit as limitFn } from "firebase/firestore";
 import { addItem } from "./cartStore";
+import "../style/App.css";
 
 export default function ProductBar({ title = "Products", category, limit = 8 }) {
   const [items, setItems] = useState([]);
@@ -13,6 +13,7 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
 
   // for private folder
   // const LOCAL_IMAGE_BASE = "/src/images/";
+  
   // SETS THE FOLDER WHERE THE IMAGES ARE LOCATED IN THE PUBLIC FOLDER
   const PUBLIC_IMAGE_BASE = "/images/";
 
@@ -34,14 +35,14 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
         const snap = await getDocs(qRef);
         if (abortRef.current.aborted) return;
 
-        const docs = snap.docs.map(d => {
+        const docs = snap.docs.map((d) => {
           const data = d.data();
           return {
             id: d.id,
             title: data.name ?? "",
             price: Number(data.price ?? 0),
             image: `${PUBLIC_IMAGE_BASE}${data.imgId}`,
-            raw: data
+            raw: data,
           };
         });
 
@@ -72,9 +73,12 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
       )}
 
       <div className="productRow" role="list">
-        {/* skeleton mantains the format of the page when its not loaded */}
         {(loading ? Array.from({ length: limit }) : items).map((p, i) => (
-          <article key={loading ? i : p.id} className={`card ${loading ? "skeleton" : ""}`} role="listitem">
+          <article
+            key={loading ? i : p.id}
+            className={`card ${loading ? "skeleton" : ""}`}
+            role="listitem"
+          >
             <div className="media">
               {!loading && (
                 <img
@@ -83,7 +87,9 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
                   loading="lazy"
                   width={160}
                   height={160}
-                  onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
+                  onError={(e) => {
+                    e.currentTarget.style.visibility = "hidden";
+                  }}
                 />
               )}
             </div>
@@ -95,14 +101,15 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
                 <span className="price">{loading ? "\u00A0" : formatPrice(p.price)}</span>
               </div>
               {!loading && (
-                <Link to={`/product/${p.id}`} className="btn">Inspect</Link>
-              )}
-              {!loading && (
                 <div className="btnRow">
-                  <Link to={`/product/${p.id}`} className="btn">Inspect</Link>
+                  <Link to={`/product/${p.id}`} className="btn">
+                    Inspect
+                  </Link>
                   <button
                     className="btn outline"
-                    onClick={() => addItem({ id: p.id, title: p.title, price: p.price, image: p.image })}
+                    onClick={() =>
+                      addItem({ id: p.id, title: p.title, price: p.price, image: p.image })
+                    }
                   >
                     Add to cart
                   </button>
@@ -112,47 +119,16 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
           </article>
         ))}
       </div>
-
-      <style>{`
-        .productsRowWrap { width: 100%; margin-bottom: 2rem; }
-        .rowHeader { display:flex; align-items:center; justify-content:space-between; padding: 1% }
-        .rowTitle { font-size: 1.5rem; }
-        .rowLink { font-size: 1.5rem; opacity:.9; text-decoration:none; }
-
-        .rowError { 
-          display:flex; gap:.75rem; align-items:center; padding:.75rem;
-          background: #ffefef; color: #6c0000; border:1px solid #ffb3b3; border-radius: 10px; margin:.5rem 0;
-        }
-
-        .productRow { 
-          display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain;
-          padding: 1%; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
-        }
-        .card { 
-          flex: 0 0 220px; display: grid; grid-template-rows: 160px auto;
-          background: #111111; color: #00ff00; border: 1px solid #2a2a2a; border-radius: 16px;
-          scroll-snap-align: start; box-shadow: 0 2px 10px rgba(0,0,0,.25);
-        }
-        .card .media { display:grid; place-items:center; padding: 10px; }
-        .card .media img { width: 100%; height: 200px; object-fit: contain; }
-        .card .content { display:flex; flex-direction:column; gap: 5px; padding: 20px; }
-        .card .title { font-size: 15px; line-height: 1.2; min-height: 2.4em; margin: auto; }
-        .card .meta { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
-        .card .btn { 
-          margin-top: auto; background: #000000; color: #00ff00; border: none; border-radius: 12px;
-          padding: 1rem 0.8rem; cursor: pointer;
-        }
-        .card .btn:active { transform: translateY(1px); }
-        .btnRow { display:flex;  gap:.5rem; }
-       .btn.outline { background: #000000; border:1px solid #2a2a2a; font-family: consolas;font-size:.85rem; }
-      `}</style>
     </section>
   );
 }
 
 function formatPrice(n) {
   try {
-    return new Intl.NumberFormat(undefined, { style: "currency", currency: "USD" }).format(n);
+    return new Intl.NumberFormat(undefined, {
+      style: "currency",
+      currency: "USD",
+    }).format(n);
   } catch {
     return `$${Number(n).toFixed(2)}`;
   }

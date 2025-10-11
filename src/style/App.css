@@ -9,15 +9,15 @@ body {
   color: rgb(0, 255, 0);
   background: linear-gradient(to bottom,
       #242424 10%,
-      rgb(5, 20, 5)
-      );
+      rgb(5, 20, 5));
   background-attachment: fixed;
 }
 
 a {
   text-decoration: none;
 }
-.cartWidget{
+
+.cartWidget {
   margin: 2rem auto;
   display: inline-flex;
   align-items: center;
@@ -27,6 +27,315 @@ a {
   color: #9cff9c;
   border-radius: 12px;
   padding: .5rem .75rem;
-  box-shadow: 0 2px 10px rgba(0,0,0,.35);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, .35);
+}
+
+/*------------- bull and cow styles ----------------*/
+.hidden {
+  display: none;
+}
+
+/* ---- GAME HUD LAYOUT ---- */
+.gamehud {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr 1fr;
+  grid-template-rows:
+    minmax(0, 1fr) minmax(0, 1fr) minmax(0, 3fr) minmax(0, 1fr) minmax(0, 1fr);
+  gap: 20px;
+  grid-auto-flow: row;
+  grid-template-areas:
+    "attempts attempts highScore highScore"
+    "bulls pastNumbers pastNumbers cows"
+    "bulls pastNumbers pastNumbers cows"
+    "bulls recentNumber recentNumber cows"
+    "bulls submitBox submitBox cows";
+  height: 90vh;
+  padding: 20px;
+}
+
+.gamehud>* {
+  min-height: 0;
+  padding: 5px;
+  border: 2px solid #00ff00;
+  color: #00ff00;
+}
+
+/* -------------- TEXT STYLES -------------- */
+.gamehud>*>p {
+  font-size: 190px;
+  text-align: center;
+}
+
+.gamehud>*>h3 {
+  margin: 0px 5px;
+  align-items: start;
+}
+
+.gamehud>*>h2 {
+  font-size: 36px;
+  margin: auto;
+  text-align: center;
+}
+
+/* ---- AREAS ---- */
+.attempts {
+  grid-area: attempts;
+}
+
+.pastNumbers {
+  grid-area: pastNumbers;
+}
+
+.recentNumber {
+  grid-area: recentNumber;
+}
+
+.submitBox {
+  grid-area: submitBox;
+  display: flex;
+  border: 2px solid #00ff00;
+}
+
+.bulls {
+  grid-area: bulls;
+}
+
+.cows {
+  grid-area: cows;
+}
+
+.highScore {
+  grid-area: highScore;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.highScore::-webkit-scrollbar {
+  width: 0px;
+  transition: width 0.3s;
+}
+
+.highScore:hover::-webkit-scrollbar {
+  width: 10px;
+}
+
+.highScore::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.highScore::-webkit-scrollbar-thumb {
+  background:  #00ff00;
+  border: 2px solid #001a00;
+}
+
+
+.attempts #attemptCount {
+  font-size: 40px;
+  text-align: center;
+  margin: 0;
+}
+
+.pastNumbers #pastList {
+  font-size: 18px;
+  text-align: center;
+}
+
+.recentNumber #recentGuess {
+  font-size: 60px;
+  text-align: center;
+  margin: 0;
+  letter-spacing: 50px;
+}
+/*------------------------ BUTTONS & INPUT ------------------------*/
+.submitBox .submitedNumber {
+  color: #00ff00;
+  height: 100%;
+  width: 100%;
+  font-size: 30px;
+  text-align: center;
+  letter-spacing: 10px;
+  border: none;
+  background: none;
+}
+
+.submitBox .submitedNumber:focus {
+  background: #005200;
+  outline: none;
+}
+
+.buttonContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+#guessBtn,
+#surrenderBtn,
+#startButton {
+  font-family: Consolas, "Courier New", monospace;
+  padding: 15px;
+  background-color: #00ff00;
+  color: black;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 26px;
+  height: 70px;
+  min-width: 200px;
+}
+
+/*--------------------- PRODUCT BAR ---------------------*/
+
+.productsRowWrap {
+  width: 100%;
+  margin-bottom: 2rem;
+}
+
+.rowHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1%;
+}
+
+.rowTitle {
+  font-size: 1.5rem;
+}
+
+.rowLink {
+  font-size: 1.5rem;
+  opacity: 0.9;
+  text-decoration: none;
+}
+
+/* Error message styling */
+.rowError {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.75rem;
+  background: #ffefef;
+  color: #6c0000;
+  border: 1px solid #ffb3b3;
+  border-radius: 10px;
+  margin: 0.5rem 0;
+}
+
+/* Product row container */
+.productRow {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 1%;
+  scroll-snap-type: x proximity;
+}
+
+/* --- Scrollbar styling (neon green Matrix look) --- */
+.productRow::-webkit-scrollbar {
+  height: 10px;
+}
+
+.productRow::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.productRow::-webkit-scrollbar-thumb {
+  background: linear-gradient(90deg, #00ff00 0%, #008000 100%);
+  border-radius: 10px;
+  box-shadow: 0 0 10px #00ff00;
+  border: 2px solid #001a00;
+}
+
+.productRow::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(90deg, #33ff33 0%, #00ff00 100%);
+  box-shadow: 0 0 20px #33ff33, 0 0 40px #00ff00;
+}
+
+/* Firefox scrollbar */
+.productRow {
+  scrollbar-color: #00ff00 transparent;
+  scrollbar-width: thin;
+}
+
+/* --- Product Card --- */
+.card {
+  flex: 0 0 220px;
+  display: grid;
+  grid-template-rows: 160px auto;
+  background: #111111;
+  color: #00ff00;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  scroll-snap-align: start;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+}
+
+.card .media {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+}
+
+.card .media img {
+  width: 100%;
+  height: 200px;
+  object-fit: contain;
+}
+
+.card .content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 20px;
+}
+
+.card .title {
+  font-size: 15px;
+  line-height: 1.2;
+  min-height: 2.4em;
+  margin: auto;
+}
+
+.card .meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.card .btn {
+  margin-top: auto;
+  background: #000000;
+  color: #00ff00;
+  border: none;
+  border-radius: 12px;
+  padding: 1rem 0.8rem;
+  cursor: pointer;
+  font-family: consolas, monospace;
+  transition: all 0.2s ease;
+}
+
+.card .btn:hover {
+  background: #002200;
+  box-shadow: 0 0 10px #00ff00;
+}
+
+.card .btn:active {
+  transform: translateY(1px);
+}
+
+.btnRow {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn.outline {
+  background: #000000;
+  border: 1px solid #2a2a2a;
+  font-family: consolas, monospace;
+  font-size: 0.85rem;
 }
 

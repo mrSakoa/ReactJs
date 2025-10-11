@@ -1,135 +1,73 @@
-import React, { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import '../style/BullStyle.css';
-
+import "../style/App.css";
 
 export default function BullNCow() {
-  let testmode = false;
+  const [gameIsRunning, setGameIsRunning] = useState(false);
+  const [secret, setSecret] = useState([]);
+  const [userTries, setUserTries] = useState(0);
+  const [pastTries, setPastTries] = useState([]); // [{guess, bulls, cows}]
+  const [highScores, setHighScores] = useState([]);
+  const [recentGuess, setRecentGuess] = useState("—");
+  const [bullsCount, setBullsCount] = useState(0);
+  const [cowsCount, setCowsCount] = useState(0);
+  const inputRef = useRef(null);
 
-  const gameIsRunning = useRef(false);
-  const secretCodeArray = useRef([]);
-  const userTries = useRef(0);
-  const pastTries = useRef([]);
-  const highScoresRef = useRef([]);
-
-  const bnc = {
-    zone: useRef(null),
-    mainText: useRef(null),
-    startButton: useRef(null),
-    guessInput: useRef(null),
-    guessBtn: useRef(null),
-    surrenderBtn: useRef(null),
-    attemptCount: useRef(null),
-    pastList: useRef(null),
-    recentGuess: useRef(null),
-    bullsCount: useRef(null),
-    cowsCount: useRef(null),
-    highScores: useRef(null),
-  };
+  const TESTMODE = false;
+  const HS_KEY = "bcn_highscores_v1";
 
   function setStatus(msg, type = "info") {
-    Swal.fire({ text: msg, icon: type, toast: true, position: "top", timer: 2000, showConfirmButton: false });
-  }
-
-  function renderAttempts() {
-    if (bnc.attemptCount.current) bnc.attemptCount.current.textContent = String(userTries.current);
-  }
-
-  function renderPast() {
-    if (!bnc.pastList.current) return;
-    bnc.pastList.current.innerHTML = "";
-    pastTries.current
-      .slice()
-      .reverse()
-      .forEach(({ guess, bulls, cows }) => {
-        const li = document.createElement("li");
-        li.textContent = `${guess} → Bulls ${bulls} | Cows ${cows}`;
-        bnc.pastList.current.appendChild(li);
-      });
-  }
-
-  function renderRecent(guess) {
-    if (bnc.recentGuess.current) bnc.recentGuess.current.textContent = guess ?? "—";
-  }
-
-  function renderBC(b, c) {
-    if (bnc.bullsCount.current) bnc.bullsCount.current.textContent = String(b);
-    if (bnc.cowsCount.current) bnc.cowsCount.current.textContent = String(c);
-  }
-
-  function renderHighScores() {
-    if (!bnc.highScores.current) return;
-    bnc.highScores.current.innerHTML = "";
-    highScoresRef.current.forEach((s) => {
-      const li = document.createElement("li");
-      li.textContent = `${s.name} — ${s.tries} tries (${s.date})`;
-      bnc.highScores.current.appendChild(li);
+    Swal.fire({
+      text: msg,
+      icon: type,
+      toast: true,
+      position: "top",
+      timer: 2000,
+      showConfirmButton: false,
     });
   }
 
-  function enableInput(enabled) {
-    if (bnc.guessInput.current) bnc.guessInput.current.disabled = !enabled;
-    if (bnc.guessBtn.current) bnc.guessBtn.current.disabled = !enabled;
-    if (enabled && bnc.guessInput.current) bnc.guessInput.current.focus();
-  }
-
-  function showZone() {
-    if (bnc.zone.current) bnc.zone.current.style.display = "block";
-    if (bnc.mainText.current) bnc.mainText.current.classList.add("hidden");
-  }
-
-  function hideZone() {
-    if (bnc.zone.current) bnc.zone.current.style.display = "none";
-    if (bnc.mainText.current) bnc.mainText.current.classList.remove("hidden");
-  }
-
   function generateSecretCode() {
-    const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+    const d = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
     const code = [];
     for (let i = 0; i < 4; i++) {
-      const idx = Math.floor(Math.random() * digits.length);
-      code.push(digits[idx]);
-      digits.splice(idx, 1);
+      const idx = Math.floor(Math.random() * d.length);
+      code.push(d[idx]);
+      d.splice(idx, 1);
     }
     return code;
   }
 
   function resetHUD() {
-    userTries.current = 0;
-    pastTries.current = [];
-    renderAttempts();
-    renderPast();
-    renderRecent("—");
-    renderBC(0, 0);
-    if (bnc.guessInput.current) bnc.guessInput.current.value = "";
+    setUserTries(0);
+    setPastTries([]);
+    setRecentGuess("—");
+    setBullsCount(0);
+    setCowsCount(0);
+    if (inputRef.current) inputRef.current.value = "";
   }
 
   function startGame() {
-    secretCodeArray.current = generateSecretCode();
-    gameIsRunning.current = true;
-    showZone();
+    const code = generateSecretCode();
+    setSecret(code);
+    setGameIsRunning(true);
     resetHUD();
-    enableInput(true);
-    if (testmode) setStatus(`(DEV) Secret: ${secretCodeArray.current.join("")}`, "warning");
+    setTimeout(() => inputRef.current?.focus(), 0);
+    if (TESTMODE) setStatus(`(DEV) Secret: ${code.join("")}`, "warning");
   }
 
   function surrenderGame(silent = false) {
-    if (!gameIsRunning.current) {
-      hideZone();
-      return;
-    }
-    gameIsRunning.current = false;
-    enableInput(false);
+    if (!gameIsRunning) return;
+    setGameIsRunning(false);
     if (!silent) setStatus("You surrendered.", "error");
-    hideZone();
   }
 
   function validateGuess(s) {
     if (!s) return { ok: false, reason: "empty" };
     s = s.trim();
     if (s.toLowerCase() === "sv_cheats") {
-      setStatus(`Secret: ${secretCodeArray.current.join("")}`, "info");
-      renderRecent("sv_cheats");
+      setStatus(`Secret: ${secret.join("")}`, "info");
+      setRecentGuess("sv_cheats");
       return { ok: false, reason: "cheat" };
     }
     if (!/^\d{4}$/.test(s)) return { ok: false, reason: "format" };
@@ -137,56 +75,41 @@ export default function BullNCow() {
     return { ok: true, value: s };
   }
 
-  function checkGuess(userString) {
-    const userArray = userString.split("").map(Number);
-    let bulls = 0,
-      cows = 0;
+  function checkGuess(guessStr) {
+    const userArray = guessStr.split("").map(Number);
+    let b = 0, c = 0;
     userArray.forEach((digit, idx) => {
-      if (digit === secretCodeArray.current[idx]) bulls++;
-      else if (secretCodeArray.current.includes(digit)) cows++;
+      if (digit === secret[idx]) b++;
+      else if (secret.includes(digit)) c++;
     });
-    return { bulls, cows, win: bulls === 4 };
-  }
-
-  const highScoreKey = "bcn_highscores_v1";
-
-  async function loadHighScores() {
-    try {
-      const cached = JSON.parse(localStorage.getItem(highScoreKey));
-      if (Array.isArray(cached)) return cached;
-    } catch {}
-    try {
-      const res = await fetch("./json/highScores.json", { cache: "no-store" });
-      const json = await res.json();
-      const scores = Array.isArray(json.scores) ? json.scores : [];
-      localStorage.setItem(highScoreKey, JSON.stringify(scores));
-      return scores;
-    } catch {
-      const empty = [];
-      localStorage.setItem(highScoreKey, JSON.stringify(empty));
-      return empty;
-    }
+    return { bulls: b, cows: c, win: b === 4 };
   }
 
   function saveHighScores(scores) {
-    localStorage.setItem(highScoreKey, JSON.stringify(scores));
+    localStorage.setItem(HS_KEY, JSON.stringify(scores));
+    // update the higscore tab
+     window.dispatchEvent(new Event("highscores:update"));
   }
 
   function addHighScore(name, tries) {
-    const entry = { name: name && name.trim() ? name.trim() : "Player", tries, date: new Date().toISOString().slice(0, 10) };
-    highScoresRef.current.push(entry);
-    highScoresRef.current.sort((a, b) => a.tries - b.tries || (a.date < b.date ? 1 : -1));
-    highScoresRef.current = highScoresRef.current.slice(0, 5);
-    saveHighScores(highScoresRef.current);
-    renderHighScores();
+    const entry = {
+      name: name?.trim() ? name.trim() : "Player",
+      tries,
+      date: new Date().toISOString().slice(0, 10),
+    };
+    const updated = [...highScores, entry]
+      .sort((a, b) => a.tries - b.tries || (a.date < b.date ? 1 : -1))
+      .slice(0, 5);
+    setHighScores(updated);
+    saveHighScores(updated);
   }
 
-  function submitGuess() {
-    if (!gameIsRunning.current) {
+  async function submitGuess() {
+    if (!gameIsRunning) {
       setStatus("Click Start first.", "warning");
       return;
     }
-    const raw = bnc.guessInput.current ? bnc.guessInput.current.value : "";
+    const raw = inputRef.current?.value ?? "";
     const val = validateGuess(raw);
     if (!val.ok) {
       if (val.reason === "format") setStatus("Enter exactly 4 digits.", "error");
@@ -194,21 +117,22 @@ export default function BullNCow() {
       else if (val.reason === "empty") setStatus("Type a guess first.", "warning");
       return;
     }
+
     const guess = val.value;
     const { bulls, cows, win } = checkGuess(guess);
-    userTries.current++;
-    renderAttempts();
-    renderRecent(guess);
-    renderBC(bulls, cows);
-    pastTries.current.push({ guess, bulls, cows });
-    renderPast();
+
+    setUserTries(t => t + 1);
+    setRecentGuess(guess);
+    setBullsCount(bulls);
+    setCowsCount(cows);
+    setPastTries(prev => [...prev, { guess, bulls, cows }]);
+
     if (win) {
-      gameIsRunning.current = false;
-      enableInput(false);
+      setGameIsRunning(false);
       Swal.fire({
         icon: "success",
         title: "Victory!",
-        html: `You guessed <b>${secretCodeArray.current.join("")}</b> in <b>${userTries.current}</b> tries.`,
+        html: `You guessed <b>${secret.join("")}</b> in <b>${(userTries + 1)}</b> tries.`,
         input: "text",
         inputLabel: "Your name for the High Score",
         inputPlaceholder: "Player",
@@ -220,51 +144,112 @@ export default function BullNCow() {
         allowEscapeKey: false,
         allowEnterKey: false,
       }).then(({ isConfirmed, value }) => {
-        const playerName = value && value.trim() ? value.trim() : "Player";
-        if (isConfirmed) addHighScore(playerName, userTries.current);
+        const playerName = value?.trim() ? value.trim() : "Player";
+        if (isConfirmed) addHighScore(playerName, userTries + 1);
         surrenderGame(true);
       });
-      return;
     } else {
       setStatus("Try again.", "info");
-    }
-    if (bnc.guessInput.current) {
-      bnc.guessInput.current.value = "";
-      bnc.guessInput.current.focus();
+      if (inputRef.current) {
+        inputRef.current.value = "";
+        inputRef.current.focus();
+      }
     }
   }
 
+
   useEffect(() => {
-    (async function init() {
-      highScoresRef.current = await loadHighScores();
-      renderHighScores();
-      enableInput(false);
-      hideZone();
-    })();
+    try {
+      const cached = JSON.parse(localStorage.getItem(HS_KEY));
+      if (Array.isArray(cached)) {
+        setHighScores(cached);
+        return;
+      }
+    } catch { }
+    localStorage.setItem(HS_KEY, JSON.stringify([]));
   }, []);
 
   return (
-    <div>
-      <div ref={bnc.mainText} className="mainText">Welcome</div>
-      <div className="controls">
-        <button id="startButton" ref={bnc.startButton} onClick={startGame}>Start</button>
-        <button id="surrenderBtn" ref={bnc.surrenderBtn} onClick={() => surrenderGame(false)}>Surrender</button>
-      </div>
-      <div className="gamezone" ref={bnc.zone} style={{ display: "none" }}>
-        <div className="hud">
-          <div>Attempts: <span id="attemptCount" ref={bnc.attemptCount}>0</span></div>
-          <div>Last: <span id="recentGuess" ref={bnc.recentGuess}>—</span></div>
-          <div>Bulls: <span id="bullsCount" ref={bnc.bullsCount}>0</span></div>
-          <div>Cows: <span id="cowsCount" ref={bnc.cowsCount}>0</span></div>
-        </div>
-        <div className="inputRow">
-          <input className="submitedNumber" ref={bnc.guessInput} onKeyDown={(e) => e.key === "Enter" && submitGuess()} />
-          <button id="guessBtn" ref={bnc.guessBtn} onClick={submitGuess}>Guess</button>
-        </div>
-        <ul id="pastList" ref={bnc.pastList} />
-        <h3>High Scores</h3>
-        <ul id="highScores" ref={bnc.highScores} />
-      </div>
+    <div className="gamezone">
+      {!gameIsRunning ? (
+        <>
+          <div className="mainText">
+            <h2 style={{ textAlign: "center" }}>Bulls & cows</h2>
+            <p style={{ textAlign: "center" }}>
+              Press Start to begin a new game.
+            </p>
+          </div>
+
+          <div className="buttonContainer" style={{ marginTop: 12 }}>
+            <button id="startButton" onClick={startGame}>Start</button>
+          </div>
+        </>
+      ) : (
+        <>
+          <h2 style={{ justifyContent: "center", textAlign: "center" }}>Bulls & cows</h2>
+
+          <div className="gamehud">
+            <div className="attempts">
+              <h3>Attempts:</h3>
+              <p id="attemptCount">{userTries}</p>
+            </div>
+
+            <div className="pastNumbers">
+              <h3>Old tries</h3>
+              <ul id="pastList">
+                {[...pastTries].slice().reverse().map((t, i) => (
+                  <li key={`${t.guess}-${t.bulls}-${t.cows}-${i}`}>
+                    {t.guess} → Bulls {t.bulls} | Cows {t.cows}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="recentNumber">
+              <h3>Last attempt</h3>
+              <p id="recentGuess">{recentGuess}</p>
+            </div>
+
+            <div className="submitBox">
+              <input
+                className="submitedNumber"
+                id="guessInput"
+                type="tel"
+                placeholder="write your number"
+                autoComplete="off"
+                ref={inputRef}
+                onKeyDown={(e) => { if (e.key === "Enter") submitGuess(); }}
+              />
+            </div>
+
+            <div className="bulls">
+              <h2>Bulls</h2>
+              <p id="bullsCount">{bullsCount}</p>
+            </div>
+
+            <div className="cows">
+              <h2>Cows</h2>
+              <p id="cowsCount">{cowsCount}</p>
+            </div>
+
+            <div className="highScore">
+              <h3>High Score</h3>
+              <ol id="highScores">
+                {highScores.map((s, i) => (
+                  <li key={`${s.name}-${s.date}-${s.tries}-${i}`}>
+                    {s.name} — {s.tries} tries ({s.date})
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          <div className="buttonContainer">
+            <button id="guessBtn" onClick={submitGuess}>Guess</button>
+            <button id="surrenderBtn" onClick={() => surrenderGame(false)}>Surrender</button>
+          </div>
+        </>
+      )}
     </div>
   );
 }
