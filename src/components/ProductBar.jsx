@@ -1,44 +1,62 @@
+// src/components/ProductBar.jsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { db } from "../firebase";
+import { collection, getDocs, query, where, limit as limitFn } from "firebase/firestore";
+import { addItem } from "./cartStore";
 
 export default function ProductBar({ title = "Products", category, limit = 8 }) {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const abortRef = useRef(null);
+  const abortRef = useRef({ aborted: false });
 
-  const url = useMemo(() => {
-    let fakeStoreData = "https://fakestoreapi.com/products";
-    if (category) fakeStoreData += `/category/${encodeURIComponent(category)}`;
-    const hasQuery = fakeStoreData.includes("?");
-    const params = new URLSearchParams();
-    if (limit && Number(limit) > 0) params.set("limit", String(limit));
-    return params.toString() ? `${fakeStoreData}${hasQuery ? "&" : "?"}${params}` : fakeStoreData;
+  // for private folder
+  // const LOCAL_IMAGE_BASE = "/src/images/";
+  // SETS THE FOLDER WHERE THE IMAGES ARE LOCATED IN THE PUBLIC FOLDER
+  const PUBLIC_IMAGE_BASE = "/images/";
+
+  const qRef = useMemo(() => {
+    const base = collection(db, "productos");
+    const parts = [];
+    if (category) parts.push(where("categoryId", "==", String(category)));
+    if (limit && Number(limit) > 0) parts.push(limitFn(Number(limit)));
+    return parts.length ? query(base, ...parts) : query(base, limitFn(Number(limit) || 8));
   }, [category, limit]);
 
   useEffect(() => {
     setLoading(true);
     setError("");
-    abortRef.current?.abort?.();
-    const controller = new AbortController();
-    abortRef.current = controller;
+    abortRef.current.aborted = false;
 
-    fetch(url, { signal: controller.signal })
-      .then((r) => {
-        if (!r.ok) throw new Error(`Request failed (${r.status})`);
-        return r.json();
-      })
-      .then((data) => {
-        const arr = Array.isArray(data) ? data : [data];
-        setItems(arr);
-      })
-      .catch((err) => {
-        if (err.name !== "AbortError") setError(err.message || "Failed to load products");
-      })
-      .finally(() => setLoading(false));
+    (async () => {
+      try {
+        const snap = await getDocs(qRef);
+        if (abortRef.current.aborted) return;
 
-    return () => controller.abort();
-  }, [url]);
+        const docs = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            title: data.name ?? "",
+            price: Number(data.price ?? 0),
+            image: `${PUBLIC_IMAGE_BASE}${data.imgId}`,
+            raw: data
+          };
+        });
+
+        if (!abortRef.current.aborted) setItems(docs);
+      } catch (err) {
+        if (!abortRef.current.aborted) setError(err?.message || "Failed to load products");
+      } finally {
+        if (!abortRef.current.aborted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      abortRef.current.aborted = true;
+    };
+  }, [qRef]);
 
   return (
     <section className="productsRowWrap">
@@ -48,22 +66,24 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
 
       {error && (
         <div className="rowError">
-          <span>Error 404 item not found {error}</span>
+          <span>Error loading products: {error}</span>
           <button onClick={() => window.location.reload()}>Reload</button>
         </div>
       )}
+
       <div className="productRow" role="list">
+        {/* skeleton mantains the format of the page when its not loaded */}
         {(loading ? Array.from({ length: limit }) : items).map((p, i) => (
           <article key={loading ? i : p.id} className={`card ${loading ? "skeleton" : ""}`} role="listitem">
-            {/* mantener Skeleton, para que no se desarme al cargar */}
             <div className="media">
               {!loading && (
                 <img
                   src={p.image}
-                  alt={p.title}
+                  alt={p.title || "Product image"}
                   loading="lazy"
                   width={160}
                   height={160}
+                  onError={(e) => { e.currentTarget.style.visibility = "hidden"; }}
                 />
               )}
             </div>
@@ -73,12 +93,20 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
               </h3>
               <div className="meta">
                 <span className="price">{loading ? "\u00A0" : formatPrice(p.price)}</span>
-                {!loading && p.rating && (
-                  <Stars value={p.rating.rate} count={p.rating.count} />
-                )}
               </div>
               {!loading && (
                 <Link to={`/product/${p.id}`} className="btn">Inspect</Link>
+              )}
+              {!loading && (
+                <div className="btnRow">
+                  <Link to={`/product/${p.id}`} className="btn">Inspect</Link>
+                  <button
+                    className="btn outline"
+                    onClick={() => addItem({ id: p.id, title: p.title, price: p.price, image: p.image })}
+                  >
+                    Add to cart
+                  </button>
+                </div>
               )}
             </div>
           </article>
@@ -87,43 +115,23 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
 
       <style>{`
         .productsRowWrap { width: 100%; margin-bottom: 2rem; }
-        .rowHeader { display:flex; align-items:fakeStoreDataline; justify-content:space-between; padding: 1% }
-        .rowTitle { font-size: 1.5 rem; }
-        .rowLink { font-size: 1.5 rem; opacity:.9; text-decoration:none; }
+        .rowHeader { display:flex; align-items:center; justify-content:space-between; padding: 1% }
+        .rowTitle { font-size: 1.5rem; }
+        .rowLink { font-size: 1.5rem; opacity:.9; text-decoration:none; }
 
         .rowError { 
-        display:flex; 
-        gap:.75rem; 
-        align-items:center; 
-        padding:.75rem; 
-        background: #ff0000; 
-        color: #6c4a00; 
-        border:1px 
-        solid #ffe69c; 
-        border-radius: 10px; 
-        margin:.5rem 0; 
+          display:flex; gap:.75rem; align-items:center; padding:.75rem;
+          background: #ffefef; color: #6c0000; border:1px solid #ffb3b3; border-radius: 10px; margin:.5rem 0;
         }
 
         .productRow { 
-          display: flex; 
-          gap: 12px; 
-          overflow-x: auto; 
-          overscroll-behavior-x: contain; 
-          padding: 1%; 
-          scroll-snap-type: x proximity; 
-          -webkit-overflow-scrolling: touch; 
-          scrollbar-width: thin;
+          display: flex; gap: 12px; overflow-x: auto; overscroll-behavior-x: contain;
+          padding: 1%; scroll-snap-type: x proximity; -webkit-overflow-scrolling: touch; scrollbar-width: thin;
         }
         .card { 
-          flex: 0 0 220px; 
-          display: grid; 
-          grid-template-rows: 160px auto; 
-          background: #111111; 
-          color: #00ff00; 
-          border: 1px solid #2a2a2a; 
-          border-radius: 16px; 
-          scroll-snap-align: start; 
-          box-shadow: 0 2px 10px rgba(0,0,0,.25);
+          flex: 0 0 220px; display: grid; grid-template-rows: 160px auto;
+          background: #111111; color: #00ff00; border: 1px solid #2a2a2a; border-radius: 16px;
+          scroll-snap-align: start; box-shadow: 0 2px 10px rgba(0,0,0,.25);
         }
         .card .media { display:grid; place-items:center; padding: 10px; }
         .card .media img { width: 100%; height: 200px; object-fit: contain; }
@@ -131,31 +139,14 @@ export default function ProductBar({ title = "Products", category, limit = 8 }) 
         .card .title { font-size: 15px; line-height: 1.2; min-height: 2.4em; margin: auto; }
         .card .meta { display:flex; align-items:center; justify-content:space-between; gap:0.5rem; }
         .card .btn { 
-          margin-top: auto; 
-          background: #000000;
-          color: #00ff00;  
-          border: none; 
-          border-radius: 12px; 
-          padding: 0.55rem 0.8rem; 
-          cursor: pointer; 
+          margin-top: auto; background: #000000; color: #00ff00; border: none; border-radius: 12px;
+          padding: 1rem 0.8rem; cursor: pointer;
         }
-        .card .btn:active { transform: translateY(1px); }        
+        .card .btn:active { transform: translateY(1px); }
+        .btnRow { display:flex;  gap:.5rem; }
+       .btn.outline { background: #000000; border:1px solid #2a2a2a; font-family: consolas;font-size:.85rem; }
       `}</style>
     </section>
-  );
-}
-
-function Stars({ value = 0, count = 0 }) {
-  const full = Math.round(value);
-  return (
-    <div className="stars" title={`${value} / 5 (${count})`}>
-      {Array.from({ length: 5 }).map((_, i) => (
-        <span key={i} aria-hidden>{i < full ? "★" : "☆"}</span>
-      ))}
-      <style>{`
-        .stars { font-size: .9rem; letter-spacing: 1px; }
-      `}</style>
-    </div>
   );
 }
 

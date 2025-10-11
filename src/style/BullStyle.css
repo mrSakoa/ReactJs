@@ -1,0 +1,52 @@
+
+.hidden {
+  display: none;
+}
+
+
+#surrenderBtn,
+#guessBtn {
+  margin: 10px;
+  font-family: 'Consolas', 'Courier New', monospace;
+  padding: 15px;
+  background-color: rgb(0, 255, 0);
+  color: black;
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 26px;
+  height: 70px;
+  width: 200px;
+}
+
+.submitedNumber {
+  color: rgb(0, 255, 0);
+  height: 100%;
+  width: 100%;
+  font-size: 30px;
+  text-align: center;
+  letter-spacing: 10px;
+  border: none;
+  background: none;
+}
+.submitedNumber:focus {
+  background: #005200;
+  outline: none;
+}
+
+#recentGuess {
+  font-size: 60px;
+  text-align: center;
+  margin: 0;
+  letter-spacing: 50px;
+}
+#attemptCount {
+  font-size: 40px;
+  text-align: center;
+  margin: 0;
+}
+#pastList {
+  font-size: 18px;
+  text-align: center;
+}
+
