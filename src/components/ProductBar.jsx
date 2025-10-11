@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { db } from "../firebase";
 import { collection, getDocs, query, where, limit as limitFn } from "firebase/firestore";
 import { addItem } from "./cartStore";
-import "../style/App.css";
+import "../style/app.css";
 
 export default function ProductBar({ title = "Products", category, limit = 8 }) {
   const [items, setItems] = useState([]);

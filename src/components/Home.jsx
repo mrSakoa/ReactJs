@@ -1,5 +1,5 @@
-import ProductBar from "./ProductBar";
-import CartWidget from "./CartWidget";
+import ProductBar from "./productBar";
+import CartWidget from "./cartwidget";
 
 function Home() {
   return (

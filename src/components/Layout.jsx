@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom"
 
-import HamburgerNavbar from "./HamburgerNavbar"
+import HamburgerNavbar from "./hamburgernavbar"
 
 
 function Layout() {

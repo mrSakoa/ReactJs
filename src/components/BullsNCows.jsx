@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import Swal from "sweetalert2";
-import "../style/App.css";
+import "../style/app.css";
 
 export default function BullNCow() {
   const [gameIsRunning, setGameIsRunning] = useState(false);
